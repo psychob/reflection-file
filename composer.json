@@ -1,0 +1,35 @@
+{
+    "name": "psychob/reflection-file",
+    "description": "Reflection File implementation",
+    "type": "library",
+    "require": {
+        "php": "^7.1",
+        "ext-tokenizer": "*"
+    },
+    "require-dev": {
+        "mockery/mockery": "^1.2",
+        "phpunit/phpunit": "^8.2",
+        "symfony/var-dumper": "^4.3"
+    },
+    "license": "MPL-2.0",
+    "authors": [
+        {
+            "name": "Andrzej Budzanowski",
+            "email": "kontakt@andrzej.budzanowski.pl"
+        }
+    ],
+    "minimum-stability": "stable",
+    "config": {
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "PsychoB\\ReflectionFile\\": "./src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\PsychoB\\ReflectionFile\\": "./tests"
+        }
+    }
+}

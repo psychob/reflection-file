@@ -104,4 +104,18 @@
             $this->assertNotEmpty($reflection->getTraits());
             $this->assertCount(1, $reflection->getTraits());
         }
+
+        public function testReflectionFileInjector()
+        {
+            $reflection = new ReflectionFile($this->fileToTest('BadFormatting.php'), false);
+
+            $this->assertNotEmpty($reflection->getNamespaces());
+            $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles\BadFormattingOf'], $reflection->getNamespaces());
+            $this->assertEmpty($reflection->getAbstractClasses());
+            $this->assertNotEmpty($reflection->getClasses());
+            $this->assertCount(1, $reflection->getClasses());
+            $this->assertEmpty($reflection->getFunctions());
+            $this->assertEmpty($reflection->getInterfaces());
+            $this->assertEmpty($reflection->getTraits());
+        }
     }

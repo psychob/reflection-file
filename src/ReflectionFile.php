@@ -197,14 +197,14 @@
                             continue;
 
                         case T_USE:
-                            $this->parse_skip_use($tokens, $it, $tokenCount, $namespace);
+                            $this->parse_skip_use($tokens, $it, $tokenCount);
                             break;
-
-                        case T_CLOSE_TAG:
-                            if (!$subExpression)
-                                return;
-                            break;
-
+                        //
+                        //                        case T_CLOSE_TAG:
+                        //                            if (!$subExpression)
+                        //                                return;
+                        //                            break;
+                        //
                         case T_FUNCTION:
                             $this->parse_function($tokens, $it, $tokenCount, $namespace);
                             break;
@@ -216,21 +216,25 @@
                         case T_ABSTRACT:
                             $this->parse_abstract($tokens, $it, $tokenCount, $namespace);
                             break;
+
                         case T_FINAL:
                             $this->parse_final($tokens, $it, $tokenCount, $namespace);
                             break;
+
                         case T_CLASS:
                             $this->parse_class($tokens, $it, $tokenCount, $namespace);
                             break;
+
                         case T_TRAIT:
                             $this->parse_trait($tokens, $it, $tokenCount, $namespace);
                             break;
+
                         case T_INTERFACE:
                             $this->parse_interface($tokens, $it, $tokenCount, $namespace);
                             break;
 
                         default:
-                            dump(token_name($currentToken[0]) . ' -> ' . $currentToken[1]);
+                            throw new InvalidTokenException($tokens, $it);
                     }
                 } else {
                     switch ($currentToken) {
@@ -240,7 +244,7 @@
                             }
 
                         default:
-                            dump($currentToken);
+                            throw new InvalidTokenException($tokens, $it);
                     }
                 }
             }
@@ -270,7 +274,7 @@
             $this->parse_balanceBrackets($tokens, $it, $tokenCount);
         }
 
-        private function parse_balanceBrackets(array $tokens, int &$it, int $tokenCount)
+        private function parse_balanceBrackets(array $tokens, int &$it, int $tokenCount, int $depth = 0)
         {
             $this->assertSymbol($tokens, $it, '{');
             $it++;
@@ -279,12 +283,16 @@
                 if (!is_array($tokens[$it])) {
                     switch ($tokens[$it]) {
                         case '{':
-                            $this->parse_balanceBrackets($tokens, $it, $tokenCount);
+                            $this->parse_balanceBrackets($tokens, $it, $tokenCount, $depth + 1);
                             break;
 
                         case '}':
                             $it++;
                             return;
+
+                        case '"':
+                            $this->parse_swallow_string($tokens, $it, $tokenCount, $tokens[$it]);
+                            break;
                     }
                 }
             }
@@ -410,17 +418,33 @@
             }
         }
 
-        private function assertToken(array $tokens, int $it, int $type): void {
+        private function parse_swallow_string(array $tokens, int &$it, int $tokenCount, string $deli)
+        {
+            $this->assertSymbol($tokens, $it, $deli);
+            $it++;
+
+            for (; $it < $tokenCount; ++$it) {
+                if (!is_array($tokens[$it])) {
+                    if ($tokens[$it] === $deli)
+                        return;
+                }
+            }
+        }
+
+        private function assertToken(array $tokens, int $it, int $type): void
+        {
             if (!(is_array($tokens[$it]) && $tokens[$it][0] === $type)) {
                 throw new InvalidTokenException($tokens, $it, $type);
             }
         }
 
-        private function assertSymbol(array $tokens, int $it, string $symbol): void {
+        private function assertSymbol(array $tokens, int $it, string $symbol): void
+        {
             if (!(!is_array($tokens[$it]) && $tokens[$it] === $symbol)) {
                 throw new InvalidTokenException($tokens, $it, $symbol);
             }
         }
+
     }
 
     function __anonymous_load_file(string $fileName)

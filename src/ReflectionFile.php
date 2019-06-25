@@ -9,6 +9,7 @@
 
     use PsychoB\ReflectionFile\Exception\ClassNotFoundException;
     use PsychoB\ReflectionFile\Exception\FileNotFoundException;
+    use PsychoB\ReflectionFile\Exception\FunctionNotFoundException;
     use PsychoB\ReflectionFile\Exception\InvalidTokenException;
     use ReflectionClass;
     use ReflectionException;
@@ -79,9 +80,7 @@
          */
         public function getNamespaceNames(): array
         {
-            if (!$this->parsed) {
-                $this->parse();
-            }
+            $this->ensureParsed();
 
             return $this->objNamespaces;
         }
@@ -93,11 +92,9 @@
          */
         public function getAbstractClassNames(): array
         {
-            if (!$this->parsed) {
-                $this->parse();
-            }
+            $this->ensureParsed();
 
-            return $this->objNamespaces;
+            return $this->objAbstractClass;
         }
 
         /**
@@ -135,9 +132,7 @@
          */
         public function getInterfaceNames(): array
         {
-            if (!$this->parsed) {
-                $this->parse();
-            }
+            $this->ensureParsed();
 
             return $this->objInterfaces;
         }
@@ -172,9 +167,7 @@
 
         public function getTraitNames(): array
         {
-            if (!$this->parsed) {
-                $this->parse();
-            }
+            $this->ensureParsed();
 
             return $this->objTraits;
         }
@@ -195,19 +188,42 @@
 
         public function getFunctionNames(): array
         {
-            if (!$this->parsed) {
-                $this->parse();
-            }
+            $this->ensureParsed();
 
             return $this->objFunctions;
         }
 
         public function getFunctions(): array
         {
+            $this->ensureParsed();
+
+            if (!$this->loaded) {
+                $this->load();
+            }
+
+            if (empty($this->cacheFunctions) && !empty($this->objFunctions)) {
+                foreach ($this->objFunctions as $function) {
+                    try {
+                        $this->cacheFunctions[] = new ReflectionFunction($function);
+                    } catch (ReflectionException $e) {
+                        // should never happen
+                        throw new RuntimeException("Failed loading function: {$function}", 0, $e);
+                    }
+                }
+            }
+
+            return $this->cacheFunctions;
         }
 
         public function getFunction(string $name): ReflectionFunction
         {
+            foreach ($this->getFunctions() as $function) {
+                if ($function->getName() === $name) {
+                    return $function;
+                }
+            }
+
+            throw new FunctionNotFoundException($name);
         }
 
         /**
@@ -262,9 +278,7 @@
          */
         public function getObjectNames(): array
         {
-            if (!$this->parsed) {
-                $this->parse();
-            }
+            $this->ensureParsed();
 
             return $this->objObjects;
         }
@@ -276,9 +290,7 @@
          */
         public function getObjects(): array
         {
-            if (!$this->parsed) {
-                $this->parse();
-            }
+            $this->ensureParsed();
 
             if (!$this->loaded) {
                 $this->load();
@@ -321,9 +333,7 @@
          */
         protected function fetchObjects(callable $filter): array
         {
-            if (!$this->parsed) {
-                $this->parse();
-            }
+            $this->ensureParsed();
 
             $ret = [];
 
@@ -345,9 +355,7 @@
          */
         protected function fetchObject(callable $filter, string $name): ReflectionClass
         {
-            if (!$this->parsed) {
-                $this->parse();
-            }
+            $this->ensureParsed();
 
             foreach ($this->fetchObjects($filter) as $class) {
                 if ($class->getName() === $name) {
@@ -486,9 +494,9 @@
 
             if (!$skip) {
                 if (empty($namespace)) {
-                    $this->functions[] = $tokens[$it][1];
+                    $this->objFunctions[] = $tokens[$it][1];
                 } else {
-                    $this->functions[] = $namespace . '\\' . $tokens[$it][1];
+                    $this->objFunctions[] = $namespace . '\\' . $tokens[$it][1];
                 }
             }
 
@@ -544,10 +552,10 @@
 
             for (; $it < $tokenCount; ++$it) {
                 if (!is_array($tokens[$it]) && $tokens[$it] === ';') {
-                    $this->namespaces[] = $ns;
+                    $this->objNamespaces[] = $ns;
                     return $ns;
                 } else if (!is_array($tokens[$it]) && $tokens[$it] === '{') {
-                    $this->namespaces[] = $ns;
+                    $this->objNamespaces[] = $ns;
                     $this->parse_phpContent($tokens, $it, $tokenCount, $ns, true);
                     return '';
                 } else {
@@ -574,17 +582,17 @@
         private function parse_final(array $tokens, int & $it, int $tokenCount, string $namespace)
         {
             $this->assertToken($tokens, $it, T_FINAL);
-            $it += 2;
+            $it += 4;
 
-            $this->parse_class($tokens, $it, $tokenCount, $namespace);
+            $this->objClass[] = $this->parse_class_viscera($tokens, $it, $tokenCount, $namespace);
         }
 
         private function parse_abstract(array $tokens, int & $it, int $tokenCount, string $namespace)
         {
             $this->assertToken($tokens, $it, T_ABSTRACT);
-            $it += 2;
+            $it += 4;
 
-            $this->parse_class($tokens, $it, $tokenCount, $namespace);
+            $this->objAbstractClass[] = $this->parse_class_viscera($tokens, $it, $tokenCount, $namespace);
         }
 
         private function parse_trait(array $tokens, int & $it, int $tokenCount, string $namespace)
@@ -592,7 +600,7 @@
             $this->assertToken($tokens, $it, T_TRAIT);
             $it += 2;
 
-            $this->parse_class_viscera($tokens, $it, $tokenCount, $namespace);
+            $this->objTraits[] = $this->parse_class_viscera($tokens, $it, $tokenCount, $namespace);
         }
 
         private function parse_interface(array $tokens, int & $it, int $tokenCount, string $namespace)
@@ -600,7 +608,7 @@
             $this->assertToken($tokens, $it, T_INTERFACE);
             $it += 2;
 
-            $this->parse_class_viscera($tokens, $it, $tokenCount, $namespace);
+            $this->objInterfaces[] = $this->parse_class_viscera($tokens, $it, $tokenCount, $namespace);
         }
 
         private function parse_class(array $tokens, int & $it, int $tokenCount, string $namespace)
@@ -608,7 +616,7 @@
             $this->assertToken($tokens, $it, T_CLASS);
             $it += 2;
 
-            $this->parse_class_viscera($tokens, $it, $tokenCount, $namespace);
+            $this->objClass[] = $this->parse_class_viscera($tokens, $it, $tokenCount, $namespace);
         }
 
         /**
@@ -616,8 +624,10 @@
          * @param int    $it
          * @param int    $tokenCount
          * @param string $namespace
+         *
+         * @return string
          */
-        private function parse_class_viscera(array $tokens, int &$it, int $tokenCount, string $namespace)
+        private function parse_class_viscera(array $tokens, int &$it, int $tokenCount, string $namespace): string
         {
             if (empty($namespace)) {
                 $name = $tokens[$it][1];
@@ -625,7 +635,7 @@
                 $name = $namespace . '\\' . $tokens[$it][1];
             }
 
-            $this->classes[] = $name;
+            $this->objObjects[] = $name;
 
             // skip over prologue of function
             for (; $it < $tokenCount; ++$it) {
@@ -636,6 +646,8 @@
 
             // now we balance brackets
             $this->parse_balanceBrackets($tokens, $it, $tokenCount);
+
+            return $name;
         }
 
         private function parse_skip_use(array $tokens, int &$it, int $tokenCount)
@@ -674,6 +686,13 @@
         {
             if (!(!is_array($tokens[$it]) && $tokens[$it] === $symbol)) {
                 throw new InvalidTokenException($tokens, $it, $symbol);
+            }
+        }
+
+        private function ensureParsed(): void
+        {
+            if (!$this->parsed) {
+                $this->parse();
             }
         }
 

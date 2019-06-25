@@ -24,12 +24,12 @@
                                                    int $interfaces,
                                                    int $traits)
         {
-            $this->assertCount($namespaces, $file->getNamespaceNames(), 'Invalid namespace count');
-            $this->assertCount($abstractClasses, $file->getAbstractClassNames(), 'Invalid abstract classes count');
-            $this->assertCount($classes, $file->getClassNames(), 'Invalid classes count');
-            $this->assertCount($functions, $file->getFunctionNames(), 'Invalid function count');
-            $this->assertCount($interfaces, $file->getInterfaceNames(), 'Invalid interfaces count');
-            $this->assertCount($traits, $file->getTraitNames(), 'Invalid traits count');
+            $this->assertCount($namespaces, $file->getNamespaceNames(),             'Invalid namespace count');
+            $this->assertCount($abstractClasses, $file->getAbstractClassNames(),    'Invalid abstract classes count');
+            $this->assertCount($classes, $file->getClassNames(),                    'Invalid classes count');
+            $this->assertCount($functions, $file->getFunctionNames(),               'Invalid function count');
+            $this->assertCount($interfaces, $file->getInterfaceNames(),             'Invalid interfaces count');
+            $this->assertCount($traits, $file->getTraitNames(),                     'Invalid traits count');
         }
 
         /** @runInSeparateProcess */
@@ -73,7 +73,7 @@
         {
             $reflection = new ReflectionFile($this->fileToTest('SimpleClass.php'), false);
 
-            $this->assertReflectionFileCount($reflection, 1, 0, 0, 5, 0, 0);
+            $this->assertReflectionFileCount($reflection, 1, 0, 1, 0, 0, 0);
 
             $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles',], $reflection->getNamespaceNames());
         }
@@ -82,7 +82,7 @@
         {
             $reflection = new ReflectionFile($this->fileToTest('MultipleClasses.php'), false);
 
-            $this->assertReflectionFileCount($reflection, 1, 1, 1, 0, 1, 1);
+            $this->assertReflectionFileCount($reflection, 1, 1, 2, 0, 1, 1);
 
             $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles\Classes'], $reflection->getNamespaceNames());
         }

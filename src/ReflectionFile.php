@@ -296,10 +296,12 @@
                 foreach ($this->objObjects as $object) {
                     try {
                         $this->cacheClass[] = new ReflectionClass($object);
+                        // @codeCoverageIgnoreStart
                     } catch (ReflectionException $e) {
                         // should never happen
                         throw new RuntimeException("Failed loading class: {$object}", 0, $e);
                     }
+                        // @codeCoverageIgnoreEnd
                 }
             }
 

@@ -7,8 +7,14 @@
 
     namespace Tests\PsychoB\ReflectionFile;
 
+    use PsychoB\ReflectionFile\Exception\ClassNotFoundException;
     use PsychoB\ReflectionFile\Exception\FunctionNotFoundException;
     use PsychoB\ReflectionFile\ReflectionFile;
+    use Tests\PsychoB\ReflectionFile\TestFiles\Classes\AbstractClass;
+    use Tests\PsychoB\ReflectionFile\TestFiles\Classes\FinalClass;
+    use Tests\PsychoB\ReflectionFile\TestFiles\Classes\InterfaceForClass;
+    use Tests\PsychoB\ReflectionFile\TestFiles\Classes\SimpleClass as SimpleClassClasses;
+    use Tests\PsychoB\ReflectionFile\TestFiles\Classes\TraitForClass;
     use Tests\PsychoB\ReflectionFile\TestFiles\SimpleClass;
 
     class ReflectionFileTest extends TestCase
@@ -38,6 +44,13 @@
         {
             foreach ($functions as $fun) {
                 $this->assertInstanceOf(\ReflectionFunction::class, $file->getFunction($fun));
+            }
+        }
+
+        private function assertReflectionFileClasses(array $classes, array $names)
+        {
+            foreach ($classes as $class) {
+                $this->assertContains($class->getName(), $names);
             }
         }
 
@@ -103,8 +116,23 @@
             $this->assertReflectionFileCount($reflection, 1, 0, 1, 0, 0, 0);
 
             $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles',], $reflection->getNamespaceNames());
-            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getClass(SimpleClass::class));
             $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(SimpleClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getClass(SimpleClass::class));
+
+            $this->assertReflectionFileClasses($reflection->getClasses(), [SimpleClass::class]);
+        }
+
+        public function testReflectionFileClassFailure()
+        {
+            $reflection = new ReflectionFile($this->fileToTest('SimpleClass.php'), false);
+
+            $this->assertReflectionFileCount($reflection, 1, 0, 1, 0, 0, 0);
+
+            $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles',], $reflection->getNamespaceNames());
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(SimpleClass::class));
+
+            $this->expectException(ClassNotFoundException::class);
+            $reflection->getInterface(SimpleClass::class);
         }
 
         public function testReflectionFileMultipleClasses()
@@ -114,6 +142,28 @@
             $this->assertReflectionFileCount($reflection, 1, 1, 2, 0, 1, 1);
 
             $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles\Classes'], $reflection->getNamespaceNames());
+
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(SimpleClassClasses::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(AbstractClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(InterfaceForClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(TraitForClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(FinalClass::class));
+
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getClass(SimpleClassClasses::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getAbstractClass(AbstractClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getInterface(InterfaceForClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getTrait(TraitForClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getClass(FinalClass::class));
+
+            $this->assertReflectionFileClasses($reflection->getClasses(),
+                                               [SimpleClassClasses::class, FinalClass::class]);
+            $this->assertReflectionFileClasses($reflection->getAbstractClasses(), [AbstractClass::class]);
+            $this->assertReflectionFileClasses($reflection->getInterfaces(), [InterfaceForClass::class]);
+            $this->assertReflectionFileClasses($reflection->getTraits(), [TraitForClass::class]);
+
+            $this->assertReflectionFileClasses($reflection->getObjects(),
+                                               [SimpleClassClasses::class, FinalClass::class, AbstractClass::class,
+                                                InterfaceForClass::class, TraitForClass::class]);
         }
 
         public function testReflectionFileInjector()

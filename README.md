@@ -18,3 +18,14 @@ composer require psychob/reflection-file
 ```
 
 ## Usage
+```php
+<?php
+    use \PsychoB\ReflectionFile\ReflectionFile;
+
+    $reflection = new ReflectionFile($fileName);
+    
+    $reflection->getFunctions();
+    $reflection->getClasses();
+    $reflection->getTraits();
+    $reflection->getInterfaces();
+```

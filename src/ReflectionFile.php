@@ -196,19 +196,18 @@
         public function getFunctions(): array
         {
             $this->ensureParsed();
-
-            if (!$this->loaded) {
-                $this->load();
-            }
+            $this->ensureLoaded();
 
             if (empty($this->cacheFunctions) && !empty($this->objFunctions)) {
                 foreach ($this->objFunctions as $function) {
                     try {
                         $this->cacheFunctions[] = new ReflectionFunction($function);
+                        // @codeCoverageIgnoreStart
                     } catch (ReflectionException $e) {
                         // should never happen
                         throw new RuntimeException("Failed loading function: {$function}", 0, $e);
                     }
+                        // @codeCoverageIgnoreEnd
                 }
             }
 
@@ -291,10 +290,7 @@
         public function getObjects(): array
         {
             $this->ensureParsed();
-
-            if (!$this->loaded) {
-                $this->load();
-            }
+            $this->ensureLoaded();
 
             if (empty($this->cacheClass) && !empty($this->objObjects)) {
                 foreach ($this->objObjects as $object) {
@@ -693,6 +689,13 @@
         {
             if (!$this->parsed) {
                 $this->parse();
+            }
+        }
+
+        private function ensureLoaded(): void
+        {
+            if (!$this->loaded) {
+                $this->load();
             }
         }
 

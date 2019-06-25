@@ -195,7 +195,6 @@
 
         public function getFunctions(): array
         {
-            $this->ensureParsed();
             $this->ensureLoaded();
 
             if (empty($this->cacheFunctions) && !empty($this->objFunctions)) {
@@ -289,7 +288,6 @@
          */
         public function getObjects(): array
         {
-            $this->ensureParsed();
             $this->ensureLoaded();
 
             if (empty($this->cacheClass) && !empty($this->objObjects)) {
@@ -699,6 +697,8 @@
 
         private function ensureLoaded(): void
         {
+            $this->ensureParsed();
+
             if (!$this->loaded) {
                 $this->load();
             }

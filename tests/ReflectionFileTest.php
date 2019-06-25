@@ -8,6 +8,7 @@
     namespace Tests\PsychoB\ReflectionFile;
 
     use PsychoB\ReflectionFile\Exception\ClassNotFoundException;
+    use PsychoB\ReflectionFile\Exception\FileNotFoundException;
     use PsychoB\ReflectionFile\Exception\FunctionNotFoundException;
     use PsychoB\ReflectionFile\ReflectionFile;
     use Tests\PsychoB\ReflectionFile\TestFiles\Classes\AbstractClass;
@@ -168,11 +169,18 @@
 
         public function testReflectionFileInjector()
         {
-            $reflection = new ReflectionFile($this->fileToTest('BadFormatting.php'), false);
+            $reflection = new ReflectionFile($this->fileToTest('BadFormatting.php'));
 
             $this->assertReflectionFileCount($reflection, 1, 0, 1, 0, 0, 0);
 
             $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles\BadFormattingOf'],
                                 $reflection->getNamespaceNames());
+        }
+
+        public function testReflectionFileDontExist()
+        {
+            $this->expectException(FileNotFoundException::class);
+
+            $reflection = new ReflectionFile($this->fileToTest('NotExistingFile.php'));
         }
     }

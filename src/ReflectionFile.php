@@ -207,7 +207,7 @@
                         // should never happen
                         throw new RuntimeException("Failed loading function: {$function}", 0, $e);
                     }
-                        // @codeCoverageIgnoreEnd
+                    // @codeCoverageIgnoreEnd
                 }
             }
 
@@ -301,7 +301,7 @@
                         // should never happen
                         throw new RuntimeException("Failed loading class: {$object}", 0, $e);
                     }
-                        // @codeCoverageIgnoreEnd
+                    // @codeCoverageIgnoreEnd
                 }
             }
 
@@ -384,13 +384,8 @@
 
             for ($it = 0; $it < $tokenCount; ++$it) {
                 // we want to start parsing with T_PHP_OPEN
-                $currentToken = $tokens[$it];
-
-                if (is_array($currentToken)) {
-                    if ($currentToken[0] === T_OPEN_TAG) {
-                        $this->parse_phpContent($tokens, $it, $tokenCount);
-                    }
-                }
+                $this->parse_skipToToken($tokens, $it, $tokenCount, T_OPEN_TAG);
+                $this->parse_phpContent($tokens, $it, $tokenCount);
             }
 
             $this->parsed = true;
@@ -401,6 +396,32 @@
         {
             __anonymous_load_file($this->fileName);
             $this->loaded = true;
+        }
+
+        private function parse_skipToToken(array $tokens, int &$it, int $tokenCount, $upTo): void
+        {
+            if (!is_array($upTo)) {
+                $upTo = [$upTo];
+            }
+
+            for (; $it < $tokenCount; ++$it) {
+                if (is_array($tokens[$it]) && in_array($tokens[$it][0], $upTo)) {
+                    return;
+                }
+            }
+        }
+
+        private function parse_skipToSymbol(array $tokens, int &$it, int $tokenCount, $upTo): void
+        {
+            if (!is_array($upTo)) {
+                $upTo = [$upTo];
+            }
+
+            for (; $it < $tokenCount; ++$it) {
+                if (!is_array($tokens[$it]) && in_array($tokens[$it], $upTo)) {
+                    return;
+                }
+            }
         }
 
         private function parse_phpContent(array $tokens,
@@ -428,7 +449,7 @@
                             continue;
 
                         case T_USE:
-                            $this->parse_skip_use($tokens, $it, $tokenCount);
+                            $this->parse_use($tokens, $it, $tokenCount);
                             break;
                         //
                         //                        case T_CLOSE_TAG:
@@ -445,11 +466,11 @@
                             break;
 
                         case T_ABSTRACT:
-                            $this->parse_abstract($tokens, $it, $tokenCount, $namespace);
+                            $this->parse_abstractClass($tokens, $it, $tokenCount, $namespace);
                             break;
 
                         case T_FINAL:
-                            $this->parse_final($tokens, $it, $tokenCount, $namespace);
+                            $this->parse_finalClass($tokens, $it, $tokenCount, $namespace);
                             break;
 
                         case T_CLASS:
@@ -499,11 +520,7 @@
             }
 
             // skip over prologue of function
-            for (; $it < $tokenCount; ++$it) {
-                if (!is_array($tokens[$it]) && $tokens[$it] === '{') {
-                    break;
-                }
-            }
+            $this->parse_skipToSymbol($tokens, $it, $tokenCount, '{');
 
             // now we balance brackets
             $this->parse_balanceBrackets($tokens, $it, $tokenCount);
@@ -515,7 +532,9 @@
             $it++;
 
             for (; $it < $tokenCount; ++$it) {
-                if (!is_array($tokens[$it])) {
+                $this->parse_skipToSymbol($tokens, $it, $tokenCount, ['{', '}', '"']);
+
+                if ($it < $tokenCount) {
                     switch ($tokens[$it]) {
                         case '{':
                             $this->parse_balanceBrackets($tokens, $it, $tokenCount, $depth + 1);
@@ -526,7 +545,7 @@
                             return;
 
                         case '"':
-                            $this->parse_swallow_string($tokens, $it, $tokenCount, $tokens[$it]);
+                            $this->parse_string($tokens, $it, $tokenCount, $tokens[$it]);
                             break;
                     }
                 }
@@ -567,8 +586,6 @@
                             continue;
 
                         default:
-                            dump(token_name($tokens[$it][0]));
-
                             throw new InvalidTokenException($tokens, $it);
                     }
                 }
@@ -577,20 +594,20 @@
             return '';
         }
 
-        private function parse_final(array $tokens, int & $it, int $tokenCount, string $namespace)
+        private function parse_finalClass(array $tokens, int & $it, int $tokenCount, string $namespace)
         {
             $this->assertToken($tokens, $it, T_FINAL);
             $it += 4;
 
-            $this->objClass[] = $this->parse_class_viscera($tokens, $it, $tokenCount, $namespace);
+            $this->objClass[] = $this->parse_classViscera($tokens, $it, $tokenCount, $namespace);
         }
 
-        private function parse_abstract(array $tokens, int & $it, int $tokenCount, string $namespace)
+        private function parse_abstractClass(array $tokens, int & $it, int $tokenCount, string $namespace)
         {
             $this->assertToken($tokens, $it, T_ABSTRACT);
             $it += 4;
 
-            $this->objAbstractClass[] = $this->parse_class_viscera($tokens, $it, $tokenCount, $namespace);
+            $this->objAbstractClass[] = $this->parse_classViscera($tokens, $it, $tokenCount, $namespace);
         }
 
         private function parse_trait(array $tokens, int & $it, int $tokenCount, string $namespace)
@@ -598,7 +615,7 @@
             $this->assertToken($tokens, $it, T_TRAIT);
             $it += 2;
 
-            $this->objTraits[] = $this->parse_class_viscera($tokens, $it, $tokenCount, $namespace);
+            $this->objTraits[] = $this->parse_classViscera($tokens, $it, $tokenCount, $namespace);
         }
 
         private function parse_interface(array $tokens, int & $it, int $tokenCount, string $namespace)
@@ -606,7 +623,7 @@
             $this->assertToken($tokens, $it, T_INTERFACE);
             $it += 2;
 
-            $this->objInterfaces[] = $this->parse_class_viscera($tokens, $it, $tokenCount, $namespace);
+            $this->objInterfaces[] = $this->parse_classViscera($tokens, $it, $tokenCount, $namespace);
         }
 
         private function parse_class(array $tokens, int & $it, int $tokenCount, string $namespace)
@@ -614,7 +631,7 @@
             $this->assertToken($tokens, $it, T_CLASS);
             $it += 2;
 
-            $this->objClass[] = $this->parse_class_viscera($tokens, $it, $tokenCount, $namespace);
+            $this->objClass[] = $this->parse_classViscera($tokens, $it, $tokenCount, $namespace);
         }
 
         /**
@@ -625,7 +642,7 @@
          *
          * @return string
          */
-        private function parse_class_viscera(array $tokens, int &$it, int $tokenCount, string $namespace): string
+        private function parse_classViscera(array $tokens, int &$it, int $tokenCount, string $namespace): string
         {
             if (empty($namespace)) {
                 $name = $tokens[$it][1];
@@ -636,11 +653,7 @@
             $this->objObjects[] = $name;
 
             // skip over prologue of function
-            for (; $it < $tokenCount; ++$it) {
-                if (!is_array($tokens[$it]) && $tokens[$it] === '{') {
-                    break;
-                }
-            }
+            $this->parse_skipToSymbol($tokens, $it, $tokenCount, '{');
 
             // now we balance brackets
             $this->parse_balanceBrackets($tokens, $it, $tokenCount);
@@ -648,29 +661,19 @@
             return $name;
         }
 
-        private function parse_skip_use(array $tokens, int &$it, int $tokenCount)
+        private function parse_use(array $tokens, int &$it, int $tokenCount)
         {
             $this->assertToken($tokens, $it, T_USE);
 
-            for (; $it < $tokenCount; ++$it) {
-                if (!is_array($tokens[$it]) && $tokens[$it] === ';') {
-                    break;
-                }
-            }
+            $this->parse_skipToSymbol($tokens, $it, $tokenCount, ';');
         }
 
-        private function parse_swallow_string(array $tokens, int &$it, int $tokenCount, string $deli)
+        private function parse_string(array $tokens, int &$it, int $tokenCount, string $deli)
         {
             $this->assertSymbol($tokens, $it, $deli);
             $it++;
 
-            for (; $it < $tokenCount; ++$it) {
-                if (!is_array($tokens[$it])) {
-                    if ($tokens[$it] === $deli) {
-                        return;
-                    }
-                }
-            }
+            $this->parse_skipToSymbol($tokens, $it, $tokenCount, $deli);
         }
 
         private function assertToken(array $tokens, int $it, int $type): void

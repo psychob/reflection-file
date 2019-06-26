@@ -11,7 +11,6 @@
     use PsychoB\ReflectionFile\Exception\FileNotFoundException;
     use PsychoB\ReflectionFile\Exception\FunctionNotFoundException;
     use PsychoB\ReflectionFile\ReflectionFile;
-    use ReflectionClass;
     use Tests\PsychoB\ReflectionFile\TestFiles\Classes\AbstractClass;
     use Tests\PsychoB\ReflectionFile\TestFiles\Classes\FinalClass;
     use Tests\PsychoB\ReflectionFile\TestFiles\Classes\InterfaceForClass;
@@ -118,8 +117,8 @@
             $this->assertReflectionFileCount($reflection, 1, 0, 1, 0, 0, 0);
 
             $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles',], $reflection->getNamespaceNames());
-            $this->assertInstanceOf(ReflectionClass::class, $reflection->getObject(SimpleClass::class));
-            $this->assertInstanceOf(ReflectionClass::class, $reflection->getClass(SimpleClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(SimpleClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getClass(SimpleClass::class));
 
             $this->assertReflectionFileClasses($reflection->getClasses(), [SimpleClass::class]);
         }
@@ -131,7 +130,7 @@
             $this->assertReflectionFileCount($reflection, 1, 0, 1, 0, 0, 0);
 
             $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles',], $reflection->getNamespaceNames());
-            $this->assertInstanceOf(ReflectionClass::class, $reflection->getObject(SimpleClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(SimpleClass::class));
 
             $this->expectException(ClassNotFoundException::class);
             $reflection->getInterface(SimpleClass::class);
@@ -145,17 +144,17 @@
 
             $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles\Classes'], $reflection->getNamespaceNames());
 
-            $this->assertInstanceOf(ReflectionClass::class, $reflection->getObject(SimpleClassClasses::class));
-            $this->assertInstanceOf(ReflectionClass::class, $reflection->getObject(AbstractClass::class));
-            $this->assertInstanceOf(ReflectionClass::class, $reflection->getObject(InterfaceForClass::class));
-            $this->assertInstanceOf(ReflectionClass::class, $reflection->getObject(TraitForClass::class));
-            $this->assertInstanceOf(ReflectionClass::class, $reflection->getObject(FinalClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(SimpleClassClasses::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(AbstractClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(InterfaceForClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(TraitForClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(FinalClass::class));
 
-            $this->assertInstanceOf(ReflectionClass::class, $reflection->getClass(SimpleClassClasses::class));
-            $this->assertInstanceOf(ReflectionClass::class, $reflection->getAbstractClass(AbstractClass::class));
-            $this->assertInstanceOf(ReflectionClass::class, $reflection->getInterface(InterfaceForClass::class));
-            $this->assertInstanceOf(ReflectionClass::class, $reflection->getTrait(TraitForClass::class));
-            $this->assertInstanceOf(ReflectionClass::class, $reflection->getClass(FinalClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getClass(SimpleClassClasses::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getAbstractClass(AbstractClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getInterface(InterfaceForClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getTrait(TraitForClass::class));
+            $this->assertInstanceOf(\ReflectionClass::class, $reflection->getClass(FinalClass::class));
 
             $this->assertReflectionFileClasses($reflection->getClasses(),
                                                [SimpleClassClasses::class, FinalClass::class]);

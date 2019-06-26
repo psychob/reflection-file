@@ -18,8 +18,6 @@
 
     class ReflectionFile
     {
-        use ReflectionFileBaseTrait;
-
         /** @var string */
         protected $fileName;
 
@@ -40,6 +38,12 @@
 
         /** @var string[] */
         protected $objClass = [];
+
+        /** @var string[] */
+        protected $objObjects = [];
+
+        /** @var ReflectionClass[] */
+        protected $cacheClass = [];
 
         /** @var ReflectionFunction[] */
         protected $cacheFunctions = [];
@@ -262,6 +266,100 @@
             return $this->fetchObject(function (ReflectionClass $class) {
                 return !$class->isAbstract() && !$class->isInterface() && !$class->isTrait();
             }, $name);
+        }
+
+        /**
+         * Get all object names in file (traits, interfaces, abstract classes, classes). This method won't load file,
+         * only parse it.
+         *
+         * @return array
+         */
+        public function getObjectNames(): array
+        {
+            $this->ensureParsed();
+
+            return $this->objObjects;
+        }
+
+        /**
+         * Get all objects defined in file (traits, interfaces, abstract classes, classes).
+         *
+         * @return ReflectionClass[]
+         */
+        public function getObjects(): array
+        {
+            $this->ensureLoaded();
+
+            if (empty($this->cacheClass) && !empty($this->objObjects)) {
+                foreach ($this->objObjects as $object) {
+                    try {
+                        $this->cacheClass[] = new ReflectionClass($object);
+                        // @codeCoverageIgnoreStart
+                    } catch (ReflectionException $e) {
+                        // should never happen
+                        throw new RuntimeException("Failed loading class: {$object}", 0, $e);
+                    }
+                    // @codeCoverageIgnoreEnd
+                }
+            }
+
+            return $this->cacheClass;
+        }
+
+        /**
+         * Get object with $name from pool of all defined objects (traits, interfaces, abstract classes, classes) in
+         * file.
+         *
+         * @param string $name
+         *
+         * @return ReflectionClass
+         * @throws ClassNotFoundException
+         */
+        public function getObject(string $name): ReflectionClass
+        {
+            return $this->fetchObject(function () {
+                return true; // no filtering
+            }, $name);
+        }
+
+        /**
+         * @param callable $filter
+         *
+         * @return array
+         */
+        protected function fetchObjects(callable $filter): array
+        {
+            $this->ensureParsed();
+
+            $ret = [];
+
+            foreach ($this->getObjects() as $object) {
+                if ($filter($object)) {
+                    $ret[] = $object;
+                }
+            }
+
+            return $ret;
+        }
+
+        /**
+         * @param callable $filter
+         * @param string   $name
+         *
+         * @return ReflectionClass
+         * @throws ClassNotFoundException
+         */
+        protected function fetchObject(callable $filter, string $name): ReflectionClass
+        {
+            $this->ensureParsed();
+
+            foreach ($this->fetchObjects($filter) as $class) {
+                if ($class->getName() === $name) {
+                    return $class;
+                }
+            }
+
+            throw new ClassNotFoundException($name);
         }
 
         private function parse()

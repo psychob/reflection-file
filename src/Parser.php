@@ -113,7 +113,7 @@
                             break;
 
                         case T_FUNCTION:
-                            $this->function_($tokens, $it, $tokenCount, $currentNs);
+                            $this->fetchFunction($tokens, $it, $tokenCount, $currentNs);
                             break;
 
                         case T_USE:
@@ -121,30 +121,31 @@
                             break;
 
                         case T_NAMESPACE:
-                            $currentNs = $this->namespace_($tokens, $it, $tokenCount);
+                            $currentNs = $this->fetchNamespace($tokens, $it, $tokenCount);
                             break;
 
                         case T_ABSTRACT:
-                            $this->abstractClass_($tokens, $it, $tokenCount, $currentNs);
+                            $this->fetchAbstractClass($tokens, $it, $tokenCount, $currentNs);
                             break;
 
                         case T_FINAL:
-                            $this->finalClass_($tokens, $it, $tokenCount, $currentNs);
+                            $this->fetchFinalClass($tokens, $it, $tokenCount, $currentNs);
                             break;
 
                         case T_CLASS:
-                            $this->class_($tokens, $it, $tokenCount, $currentNs);
+                            $this->fetchClass($tokens, $it, $tokenCount, $currentNs);
                             break;
 
                         case T_TRAIT:
-                            $this->trait_($tokens, $it, $tokenCount, $currentNs);
+                            $this->fetchTrait($tokens, $it, $tokenCount, $currentNs);
                             break;
 
                         case T_INTERFACE:
-                            $this->interface_($tokens, $it, $tokenCount, $currentNs);
+                            $this->fetchInterface($tokens, $it, $tokenCount, $currentNs);
                             break;
 
                         default:
+                            dump($tokens[$it], token_name($tokens[$it][0]));
                             continue;
                     }
                 } else {
@@ -157,7 +158,7 @@
             }
         }
 
-        private function function_(array $tokens, int &$it, int $tokenCount, string $ns): void
+        private function fetchFunction(array $tokens, int &$it, int $tokenCount, string $ns): void
         {
             $this->assertToken($tokens, $it, T_FUNCTION);
             $it++;
@@ -210,7 +211,7 @@
             $this->skipToSymbol($tokens, $it, $tokenCount, ';');
         }
 
-        private function namespace_(array $tokens, int &$it, int $tokenCount): string
+        private function fetchNamespace(array $tokens, int &$it, int $tokenCount): string
         {
             $this->assertToken($tokens, $it, T_NAMESPACE);
             $it += 2;
@@ -244,7 +245,7 @@
             return '';
         }
 
-        private function class_(array $tokens, int &$it, int $tokenCount, string $ns): void
+        private function fetchClass(array $tokens, int &$it, int $tokenCount, string $ns): void
         {
             $this->assertToken($tokens, $it, T_CLASS);
             $it += 2;
@@ -252,7 +253,7 @@
             $this->class[] = $this->classViscera($tokens, $it, $tokenCount, $ns);
         }
 
-        private function trait_(array $tokens, int &$it, int $tokenCount, string $ns): void
+        private function fetchTrait(array $tokens, int &$it, int $tokenCount, string $ns): void
         {
             $this->assertToken($tokens, $it, T_TRAIT);
             $it += 2;
@@ -260,7 +261,7 @@
             $this->traits[] = $this->classViscera($tokens, $it, $tokenCount, $ns);
         }
 
-        private function interface_(array $tokens, int &$it, int $tokenCount, string $ns): void
+        private function fetchInterface(array $tokens, int &$it, int $tokenCount, string $ns): void
         {
             $this->assertToken($tokens, $it, T_INTERFACE);
             $it += 2;
@@ -268,7 +269,7 @@
             $this->interface[] = $this->classViscera($tokens, $it, $tokenCount, $ns);
         }
 
-        private function finalClass_(array $tokens, int &$it, int $tokenCount, string $ns): void
+        private function fetchFinalClass(array $tokens, int &$it, int $tokenCount, string $ns): void
         {
             $this->assertToken($tokens, $it, T_FINAL);
             $it += 4;
@@ -276,7 +277,7 @@
             $this->class[] = $this->classViscera($tokens, $it, $tokenCount, $ns);
         }
 
-        private function abstractClass_(array $tokens, int &$it, int $tokenCount, string $ns): void
+        private function fetchAbstractClass(array $tokens, int &$it, int $tokenCount, string $ns): void
         {
             $this->assertToken($tokens, $it, T_ABSTRACT);
             $it += 4;

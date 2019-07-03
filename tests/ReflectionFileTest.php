@@ -183,4 +183,11 @@
 
             $reflection = new ReflectionFile($this->fileToTest('NotExistingFile.php'));
         }
+
+        public function testReflectionFileRequireFiles()
+        {
+            $reflection = new ReflectionFile($this->fileToTest('ReallyOldPhp.php'));
+
+            $this->assertReflectionFileCount($reflection, 0, 0, 0, 1, 0, 0);
+        }
     }

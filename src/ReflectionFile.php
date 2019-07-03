@@ -449,12 +449,12 @@
                         case T_USE:
                             $this->parse_use($tokens, $it, $tokenCount);
                             break;
-                        //
-                        //                        case T_CLOSE_TAG:
-                        //                            if (!$subExpression)
-                        //                                return;
-                        //                            break;
-                        //
+//
+//                        case T_CLOSE_TAG:
+//                            if (!$subExpression)
+//                                return;
+//                            break;
+//
                         case T_FUNCTION:
                             $this->parse_function($tokens, $it, $tokenCount, $namespace);
                             break;
@@ -484,7 +484,7 @@
                             break;
 
                         default:
-                            throw new InvalidTokenException($tokens, $it);
+                            continue;
                     }
                 } else {
                     switch ($currentToken) {
@@ -494,7 +494,7 @@
                             }
 
                         default:
-                            throw new InvalidTokenException($tokens, $it);
+                            continue;
                     }
                 }
             }
@@ -708,5 +708,6 @@
 
     function __anonymous_load_file(string $fileName)
     {
+        // We outsource loading file to free standing function, so loaded file won't have access to $this
         require_once $fileName;
     }

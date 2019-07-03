@@ -235,6 +235,9 @@
         private function fetchStringSingle(array $tokens, int &$it, int $tokenCount): void
         {
             $this->assertSymbol($tokens, $it, "'");
+            $it++;
+
+            $this->skipToSymbol($tokens, $it, $tokenCount, "'");
         }
 
         private function fetchStringDouble(array $tokens, int &$it, int $tokenCount): void

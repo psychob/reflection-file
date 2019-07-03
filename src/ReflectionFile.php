@@ -1,6 +1,6 @@
 <?php
     //
-    // reflection-file
+    // psychob/reflection-file
     // (c) 2019 RGB Lighthouse <https://rgblighthouse.pl>
     // (c) 2019 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
     //
@@ -364,27 +364,13 @@
 
         private function parse()
         {
-            $this->objClass = [];
-            $this->objObjects = [];
-            $this->objInterfaces = [];
-            $this->objNamespaces = [];
-            $this->objAbstractClass = [];
-            $this->objFunctions = [];
-            $this->objTraits = [];
-
             $this->cacheClass = [];
             $this->cacheFunctions = [];
 
-            $loaded = file_get_contents($this->fileName);
-
-            $tokens = token_get_all($loaded);
-            $tokenCount = count($tokens);
-
-            for ($it = 0; $it < $tokenCount; ++$it) {
-                // we want to start parsing with T_PHP_OPEN
-                $this->parse_skipToToken($tokens, $it, $tokenCount, T_OPEN_TAG);
-                $this->parse_phpContent($tokens, $it, $tokenCount);
-            }
+            $parser = new Parser($this->fileName);
+            [$this->objClass, $this->objObjects, $this->objInterfaces,
+             $this->objNamespaces, $this->objAbstractClass, $this->objFunctions,
+             $this->objTraits] = $parser->parse();
 
             $this->parsed = true;
             $this->loaded = false;

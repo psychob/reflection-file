@@ -190,4 +190,11 @@
 
             $this->assertReflectionFileCount($reflection, 0, 0, 0, 1, 0, 0);
         }
+
+        public function testReflectionFileWebIndex()
+        {
+            $reflection = new ReflectionFile($this->fileToTest('WebIndex.php'));
+
+            $this->assertReflectionFileCount($reflection, 0, 0, 0, 0, 0, 0);
+        }
     }

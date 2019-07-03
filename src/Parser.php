@@ -90,7 +90,11 @@
             }
         }
 
-        private function phpContext(array $tokens, int &$it, int $tokenCount, string $currentNs = '', bool $subExpression = false): void
+        private function phpContext(array $tokens,
+                                    int &$it,
+                                    int $tokenCount,
+                                    string $currentNs = '',
+                                    bool $subExpression = false): void
         {
             if ($subExpression) {
                 $this->assertSymbol($tokens, $it, '{');
@@ -145,7 +149,7 @@
                             break;
 
                         default:
-                            dump($tokens[$it], token_name($tokens[$it][0]));
+//                            dump($tokens[$it], token_name($tokens[$it][0]));
                             continue;
                     }
                 } else {
@@ -195,12 +199,56 @@
             $it++;
 
             for (; $it < $tokenCount; ++$it) {
-                $this->skipToSymbol($tokens, $it, $tokenCount, ['{', '}']);
+                $this->skipToSymbol($tokens, $it, $tokenCount, ['{', '}', '"']);
 
-                if ($tokens[$it] === '}') {
+                switch ($tokens[$it]) {
+                    case '}':
+                        break 2;
+
+                    case '{':
+                        $this->balanceBrackets($tokens, $it, $tokenCount);
+                        break;
+
+                    case '"':
+                        $this->fetchString($tokens, $it, $tokenCount);
+                        break;
+
+                    default:
+                        throw new InvalidTokenException($tokens, $it, ['{', '}', '"']);
+                }
+            }
+        }
+
+        private function fetchString(array $tokens, int &$it, int $tokenCount): void
+        {
+            switch ($tokens[$it]) {
+                case "'":
+                    $this->fetchStringSingle($tokens, $it, $tokenCount);
                     break;
-                } else {
-                    $this->balanceBrackets($tokens, $it, $tokenCount);
+
+                case '"':
+                    $this->fetchStringDouble($tokens, $it, $tokenCount);
+                    break;
+            }
+        }
+
+        private function fetchStringSingle(array $tokens, int &$it, int $tokenCount): void
+        {
+            $this->assertSymbol($tokens, $it, "'");
+        }
+
+        private function fetchStringDouble(array $tokens, int &$it, int $tokenCount): void
+        {
+            $this->assertSymbol($tokens, $it, '"');
+            $it++;
+
+            for (; $it < $tokenCount; ++$it) {
+                // Double quoted string, can contain variables like: {$foo}, and because token_get_all is retarded it
+                // reports opening as token, and closing this tag as symbol. So we need special case
+                if (is_array($tokens[$it]) && $tokens[$it][0] === T_CURLY_OPEN) {
+                    $this->skipToSymbol($tokens, $it, $tokenCount, '}');
+                } else if (!is_array($tokens[$it]) && $tokens[$it] === '"') {
+                    break;
                 }
             }
         }

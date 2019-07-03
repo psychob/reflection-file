@@ -11,12 +11,13 @@
     {
         function bad_formatting()
         {
+            // in old version of parsing this would fail
             return "{$foo}";
         }
 
 
         protected function good_formatting()
         {
-            // in old version of parsing this would fail
+            return '{$foo}';
         }
     }

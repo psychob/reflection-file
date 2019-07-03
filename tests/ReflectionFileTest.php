@@ -197,4 +197,11 @@
 
             $this->assertReflectionFileCount($reflection, 0, 0, 0, 0, 0, 0);
         }
+
+        public function testReflectionFileNoPHP()
+        {
+            $reflection = new ReflectionFile($this->fileToTest('FileWithoutPHP.php'));
+
+            $this->assertReflectionFileCount($reflection, 0, 0, 0, 0, 0, 0);
+        }
     }

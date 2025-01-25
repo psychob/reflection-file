@@ -26,19 +26,21 @@
         }
 
         private function assertReflectionFileCount(ReflectionFile $file,
-                                                   int $namespaces,
-                                                   int $abstractClasses,
-                                                   int $classes,
-                                                   int $functions,
-                                                   int $interfaces,
-                                                   int $traits)
+            int $namespaces,
+            int $abstractClasses,
+            int $classes,
+            int $functions,
+            int $interfaces,
+            int $traits,
+            int $enums = 0)
         {
-            $this->assertCount($namespaces, $file->getNamespaceNames(), 'Invalid namespace count');
-            $this->assertCount($abstractClasses, $file->getAbstractClassNames(), 'Invalid abstract classes count');
-            $this->assertCount($classes, $file->getClassNames(), 'Invalid classes count');
-            $this->assertCount($functions, $file->getFunctionNames(), 'Invalid function count');
-            $this->assertCount($interfaces, $file->getInterfaceNames(), 'Invalid interfaces count');
-            $this->assertCount($traits, $file->getTraitNames(), 'Invalid traits count');
+            $this->assertCount($namespaces, $file->getNamesOfNamespaces(), 'Invalid namespace count');
+            $this->assertCount($abstractClasses, $file->getNamesOfAbstractClasses(), 'Invalid abstract classes count');
+            $this->assertCount($classes, $file->getNamesOfClasses(), 'Invalid classes count');
+            $this->assertCount($functions, $file->getNamesOfFunctions(), 'Invalid function count');
+            $this->assertCount($interfaces, $file->getNamesOfInterfaces(), 'Invalid interfaces count');
+            $this->assertCount($traits, $file->getNamesOfTraits(), 'Invalid traits count');
+            $this->assertCount($enums, $file->getNamesOfEnums(), 'Invalid enum count');
         }
 
         private function assertReflectionFileFunctions(ReflectionFile $file, array $functions)
@@ -69,9 +71,11 @@
             $reflection = new ReflectionFile($this->fileToTest('SimpleFunctions.php'), false);
 
             $this->assertReflectionFileCount($reflection, 0, 0, 0, 5, 0, 0);
-            $this->assertReflectionFileFunctions($reflection, ['simple_functions_foo', 'simple_functions_bar',
-                                                               'simple_functions_baz', 'simple_functions_faz',
-                                                               'simple_functions_far']);
+            $this->assertReflectionFileFunctions($reflection, ['simple_functions_foo',
+                'simple_functions_bar',
+                'simple_functions_baz',
+                'simple_functions_faz',
+                'simple_functions_far']);
         }
 
         /** @runInSeparateProcess */
@@ -90,13 +94,13 @@
 
             $this->assertReflectionFileCount($reflection, 1, 0, 0, 5, 0, 0);
 
-            $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles'], $reflection->getNamespaceNames());
+            $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles'], $reflection->getNamesOfNamespaces());
             $this->assertReflectionFileFunctions($reflection,
-                                                 ['Tests\PsychoB\ReflectionFile\TestFiles\simple_functions_foo',
-                                                  'Tests\PsychoB\ReflectionFile\TestFiles\simple_functions_bar',
-                                                  'Tests\PsychoB\ReflectionFile\TestFiles\simple_functions_baz',
-                                                  'Tests\PsychoB\ReflectionFile\TestFiles\simple_functions_faz',
-                                                  'Tests\PsychoB\ReflectionFile\TestFiles\simple_functions_far']);
+                ['Tests\PsychoB\ReflectionFile\TestFiles\simple_functions_foo',
+                    'Tests\PsychoB\ReflectionFile\TestFiles\simple_functions_bar',
+                    'Tests\PsychoB\ReflectionFile\TestFiles\simple_functions_baz',
+                    'Tests\PsychoB\ReflectionFile\TestFiles\simple_functions_faz',
+                    'Tests\PsychoB\ReflectionFile\TestFiles\simple_functions_far']);
         }
 
         /** @runInSeparateProcess */
@@ -107,7 +111,7 @@
             $this->assertReflectionFileCount($reflection, 2, 0, 0, 5, 0, 0);
 
             $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles\Single',
-                                 'Tests\PsychoB\ReflectionFile\TestFiles\Double'], $reflection->getNamespaceNames());
+                'Tests\PsychoB\ReflectionFile\TestFiles\Double'], $reflection->getNamesOfNamespaces());
         }
 
         public function testReflectionFileClass()
@@ -116,7 +120,7 @@
 
             $this->assertReflectionFileCount($reflection, 1, 0, 1, 0, 0, 0);
 
-            $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles',], $reflection->getNamespaceNames());
+            $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles',], $reflection->getNamesOfNamespaces());
             $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(SimpleClass::class));
             $this->assertInstanceOf(\ReflectionClass::class, $reflection->getClass(SimpleClass::class));
 
@@ -129,7 +133,7 @@
 
             $this->assertReflectionFileCount($reflection, 1, 0, 1, 0, 0, 0);
 
-            $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles',], $reflection->getNamespaceNames());
+            $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles',], $reflection->getNamesOfNamespaces());
             $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(SimpleClass::class));
 
             $this->expectException(ClassNotFoundException::class);
@@ -142,7 +146,8 @@
 
             $this->assertReflectionFileCount($reflection, 1, 1, 2, 0, 1, 1);
 
-            $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles\Classes'], $reflection->getNamespaceNames());
+            $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles\Classes'],
+                $reflection->getNamesOfNamespaces());
 
             $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(SimpleClassClasses::class));
             $this->assertInstanceOf(\ReflectionClass::class, $reflection->getObject(AbstractClass::class));
@@ -157,14 +162,17 @@
             $this->assertInstanceOf(\ReflectionClass::class, $reflection->getClass(FinalClass::class));
 
             $this->assertReflectionFileClasses($reflection->getClasses(),
-                                               [SimpleClassClasses::class, FinalClass::class]);
+                [SimpleClassClasses::class, FinalClass::class]);
             $this->assertReflectionFileClasses($reflection->getAbstractClasses(), [AbstractClass::class]);
             $this->assertReflectionFileClasses($reflection->getInterfaces(), [InterfaceForClass::class]);
             $this->assertReflectionFileClasses($reflection->getTraits(), [TraitForClass::class]);
 
             $this->assertReflectionFileClasses($reflection->getObjects(),
-                                               [SimpleClassClasses::class, FinalClass::class, AbstractClass::class,
-                                                InterfaceForClass::class, TraitForClass::class]);
+                [SimpleClassClasses::class,
+                    FinalClass::class,
+                    AbstractClass::class,
+                    InterfaceForClass::class,
+                    TraitForClass::class]);
         }
 
         public function testReflectionFileInjector()
@@ -174,7 +182,7 @@
             $this->assertReflectionFileCount($reflection, 1, 0, 1, 0, 0, 0);
 
             $this->assertEquals(['Tests\PsychoB\ReflectionFile\TestFiles\BadFormattingOf'],
-                                $reflection->getNamespaceNames());
+                $reflection->getNamesOfNamespaces());
         }
 
         public function testReflectionFileDontExist()
@@ -203,5 +211,19 @@
             $reflection = new ReflectionFile($this->fileToTest('FileWithoutPHP.php'));
 
             $this->assertReflectionFileCount($reflection, 0, 0, 0, 0, 0, 0);
+        }
+
+        public function testReflectionFileWithAttribute()
+        {
+            $reflection = new ReflectionFile($this->fileToTest('WithAttributes.php'));
+
+            $this->assertReflectionFileCount($reflection, 1, 0, 2, 0, 0, 0);
+        }
+
+        public function testReflectionFilePhpEnum()
+        {
+            $reflection = new ReflectionFile($this->fileToTest('PhpEnum.php'));
+
+            $this->assertReflectionFileCount($reflection, 1, 0, 0, 0, 0, 0, 2);
         }
     }

@@ -18,53 +18,55 @@
 
     class ReflectionFile
     {
-        /** @var string */
-        protected $fileName;
+        /** @var string[] */
+        private array $objNamespaces = [];
 
         /** @var string[] */
-        protected $objNamespaces = [];
+        private array $objAbstractClass = [];
 
         /** @var string[] */
-        protected $objAbstractClass = [];
+        private array $objInterfaces = [];
 
         /** @var string[] */
-        protected $objInterfaces = [];
+        private array $objTraits = [];
 
         /** @var string[] */
-        protected $objTraits = [];
+        private array $objFunctions = [];
 
         /** @var string[] */
-        protected $objFunctions = [];
+        private array $objClass = [];
 
         /** @var string[] */
-        protected $objClass = [];
+        private array $objObjects = [];
 
         /** @var string[] */
-        protected $objObjects = [];
+        private array $objEnums = [];
 
         /** @var ReflectionClass[] */
-        protected $cacheClass = [];
+        private array $cacheClass = [];
 
         /** @var ReflectionFunction[] */
-        protected $cacheFunctions = [];
+        private array $cacheFunctions = [];
 
-        protected $parsed = false;
-        protected $loaded = false;
+        private bool $parsed = false;
+        private bool $loaded = false;
 
         /**
          * ReflectionFile constructor.
          *
-         * @param string $fileName     File name of loaded file
-         * @param bool   $deferLoading Defer loading $fileName until one of get* function are called
+         * @param string $fileName File name of loaded file
+         * @param bool $deferLoading Defer loading $fileName until one of get* function are called
          *
          * @throws FileNotFoundException File not found
          */
-        public function __construct(string $fileName, bool $deferLoading = true)
+        public function __construct(private readonly string $fileName, bool $deferParsing = true, bool $deferLoading = true)
         {
-            $this->fileName = $fileName;
-
             if (!file_exists($this->fileName)) {
                 throw new FileNotFoundException($fileName);
+            }
+
+            if (!$deferParsing) {
+                $this->parse();
             }
 
             if (!$deferLoading) {
@@ -73,28 +75,82 @@
             }
         }
 
+        // get names
+
         /**
-         * Get namespace names defined in file. This method won't load file, only parse it.
+         * Get the names of namespaces defined in the file.
          *
-         * @return string[]
+         * @return array The list of namespaces.
          */
-        public function getNamespaceNames(): array
+        public function getNamesOfNamespaces(): array
         {
             $this->ensureParsed();
-
             return $this->objNamespaces;
         }
 
         /**
-         * Get abstract class names defined in file. This method won't load file, only parse it.
+         * Get the first name of the namespace.
          *
-         * @return string[]
+         * @return string|null The first namespace name or null if no namespaces are defined.
          */
-        public function getAbstractClassNames(): array
+        public function getFirstNameOfNamespace(): ?string
+        {
+            $this->ensureParsed();
+
+            if (empty($this->objNamespaces)) {
+                return null;
+            }
+
+            return $this->objNamespaces[0];
+        }
+
+        public function getNamesOfAbstractClasses(): array
         {
             $this->ensureParsed();
 
             return $this->objAbstractClass;
+        }
+
+        public function getNamesOfInterfaces(): array
+        {
+            $this->ensureParsed();
+
+            return $this->objInterfaces;
+        }
+
+        public function getNamesOfTraits(): array
+        {
+            $this->ensureParsed();
+
+            return $this->objTraits;
+        }
+
+        public function getNamesOfFunctions(): array
+        {
+            $this->ensureParsed();
+
+            return $this->objFunctions;
+        }
+
+        public function getNamesOfClasses(): array
+        {
+            $this->ensureParsed();
+
+            return $this->objClass;
+        }
+
+        public function getNamesOfEnums(): array
+        {
+            $this->ensureParsed();
+
+            return $this->objEnums;
+        }
+
+        public function getNamesOfObjects(): array
+        {
+            $this->ensureParsed();
+
+            return $this->objObjects;
         }
 
         /**
@@ -104,7 +160,8 @@
          */
         public function getAbstractClasses(): array
         {
-            return $this->fetchObjects(function (ReflectionClass $class) {
+            return $this->fetchObjects(function (ReflectionClass $class)
+            {
                 return $class->isAbstract() && !$class->isTrait() && !$class->isInterface();
             });
         }
@@ -120,21 +177,10 @@
          */
         public function getAbstractClass(string $class): ReflectionClass
         {
-            return $this->fetchObject(function (ReflectionClass $class) {
+            return $this->fetchObject(function (ReflectionClass $class)
+            {
                 return $class->isAbstract() && !$class->isTrait() && !$class->isInterface();
             }, $class);
-        }
-
-        /**
-         * Get interfaces names defined in file. This method won't load file, only parse it.
-         *
-         * @return string[]
-         */
-        public function getInterfaceNames(): array
-        {
-            $this->ensureParsed();
-
-            return $this->objInterfaces;
         }
 
         /**
@@ -144,7 +190,8 @@
          */
         public function getInterfaces(): array
         {
-            return $this->fetchObjects(function (ReflectionClass $class) {
+            return $this->fetchObjects(function (ReflectionClass $class)
+            {
                 return $class->isInterface();
             });
         }
@@ -160,37 +207,26 @@
          */
         public function getInterface(string $interface): ReflectionClass
         {
-            return $this->fetchObject(function (ReflectionClass $class) {
+            return $this->fetchObject(function (ReflectionClass $class)
+            {
                 return $class->isInterface();
             }, $interface);
         }
 
-        public function getTraitNames(): array
-        {
-            $this->ensureParsed();
-
-            return $this->objTraits;
-        }
-
         public function getTraits(): array
         {
-            return $this->fetchObjects(function (ReflectionClass $class) {
+            return $this->fetchObjects(function (ReflectionClass $class)
+            {
                 return $class->isTrait();
             });
         }
 
         public function getTrait(string $name): ReflectionClass
         {
-            return $this->fetchObject(function (ReflectionClass $class) {
+            return $this->fetchObject(function (ReflectionClass $class)
+            {
                 return $class->isTrait();
             }, $name);
-        }
-
-        public function getFunctionNames(): array
-        {
-            $this->ensureParsed();
-
-            return $this->objFunctions;
         }
 
         public function getFunctions(): array
@@ -225,20 +261,6 @@
         }
 
         /**
-         * Get all classes names in file. This method won't load file, only parse it.
-         *
-         * @return string[]
-         */
-        public function getClassNames(): array
-        {
-            if ($this->parsed) {
-                $this->parse();
-            }
-
-            return $this->objClass;
-        }
-
-        /**
          * Get all classes in file (traits, interfaces, abstract classes, classes).
          *
          * @return ReflectionClass[]
@@ -247,7 +269,8 @@
          */
         public function getClasses(): array
         {
-            return $this->fetchObjects(function (ReflectionClass $class) {
+            return $this->fetchObjects(function (ReflectionClass $class)
+            {
                 return !$class->isAbstract() && !$class->isInterface() && !$class->isTrait();
             });
         }
@@ -263,22 +286,18 @@
          */
         public function getClass(string $name): ReflectionClass
         {
-            return $this->fetchObject(function (ReflectionClass $class) {
+            return $this->fetchObject(function (ReflectionClass $class)
+            {
                 return !$class->isAbstract() && !$class->isInterface() && !$class->isTrait();
             }, $name);
         }
 
-        /**
-         * Get all object names in file (traits, interfaces, abstract classes, classes). This method won't load file,
-         * only parse it.
-         *
-         * @return array
-         */
-        public function getObjectNames(): array
+        public function getEnums(): array
         {
-            $this->ensureParsed();
-
-            return $this->objObjects;
+            return $this->fetchObjects(function (ReflectionClass $class)
+            {
+                return $class->isEnum();
+            });
         }
 
         /**
@@ -317,7 +336,8 @@
          */
         public function getObject(string $name): ReflectionClass
         {
-            return $this->fetchObject(function () {
+            return $this->fetchObject(function ()
+            {
                 return true; // no filtering
             }, $name);
         }
@@ -344,7 +364,7 @@
 
         /**
          * @param callable $filter
-         * @param string   $name
+         * @param string $name
          *
          * @return ReflectionClass
          * @throws ClassNotFoundException
@@ -368,9 +388,14 @@
             $this->cacheFunctions = [];
 
             $parser = new Parser($this->fileName);
-            [$this->objClass, $this->objObjects, $this->objInterfaces,
-             $this->objNamespaces, $this->objAbstractClass, $this->objFunctions,
-             $this->objTraits] = $parser->parse();
+            [$this->objClass,
+                $this->objObjects,
+                $this->objInterfaces,
+                $this->objNamespaces,
+                $this->objAbstractClass,
+                $this->objFunctions,
+                $this->objTraits,
+                $this->objEnums] = $parser->parse();
 
             $this->parsed = true;
             $this->loaded = false;

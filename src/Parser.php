@@ -108,7 +108,7 @@
                     switch ($tokens[$it][0]) {
                         case T_WHITESPACE:
                         case T_COMMENT:
-                            continue;
+                            continue 2;
 
                         case T_CLOSE_TAG:
                             if (!$subExpression) {
@@ -150,7 +150,7 @@
 
                         default:
 //                            dump($tokens[$it], token_name($tokens[$it][0]));
-                            continue;
+                            continue 2;
                     }
                 } else {
                     if ($subExpression && $tokens[$it] === '}') {
@@ -281,11 +281,16 @@
                     switch ($tokens[$it][0]) {
                         case T_STRING:
                         case T_NS_SEPARATOR:
+                        case T_NAME_QUALIFIED:
                             $ns .= $tokens[$it][1];
                             break;
 
+                        case T_NAME_FULLY_QUALIFIED:
+                            $ns = '\\' . $tokens[$it][1];
+                            break;
+
                         case T_WHITESPACE:
-                            continue;
+                            continue 2;
 
                         default:
                             throw new InvalidTokenException($tokens, $it);

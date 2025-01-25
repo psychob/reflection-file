@@ -3,7 +3,7 @@
     "description": "Reflection File implementation",
     "type": "library",
     "require": {
-        "php": "^7.1",
+        "php": ">=8.3",
         "ext-tokenizer": "*"
     },
     "require-dev": {

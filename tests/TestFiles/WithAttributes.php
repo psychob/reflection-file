@@ -6,4 +6,16 @@
 
     namespace Tests\PsychoB\ReflectionFile\TestFiles;
 
-    class SimpleClass {}
+    use Attribute;
+
+    #[Attribute(Attribute::TARGET_CLASS)]
+    class MyAttribute
+    {
+        //
+    }
+
+    #[MyAttribute]
+    class WithAttributes
+    {
+        //
+    }

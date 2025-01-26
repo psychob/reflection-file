@@ -6,4 +6,13 @@
 
     namespace Tests\PsychoB\ReflectionFile\TestFiles;
 
-    class SimpleClass {}
+    enum PhpEnum
+    {
+        case NewEnum;
+    }
+
+
+    enum PhpEnumWithBackingType: int
+    {
+        case NewEnum = 1;
+    }

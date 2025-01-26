@@ -1,17 +1,12 @@
 <?php
     //
-    // reflection-file
-    // (c) 2019 RGB Lighthouse <https://rgblighthouse.pl>
-    // (c) 2019 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
+    //  psychob/reflection-file
+    //  (c) 2019 - 2025 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
     //
 
-    function simple_functions_foo()
-    {
-    }
+    function simple_functions_foo() {}
 
-    function simple_functions_bar(int $abc)
-    {
-    }
+    function simple_functions_bar(int $abc) {}
 
     function simple_functions_baz(int $abc): string
     {
@@ -27,10 +22,6 @@
         }
     }
 
-    function simple_functions_faz(int $abc, \Iterator $cde): string
-    {
-    }
+    function simple_functions_faz(int $abc, \Iterator $cde): string {}
 
-    function simple_functions_far(int $abc, \Iterator $cde): \ArrayAccess
-    {
-    }
+    function simple_functions_far(int $abc, \Iterator $cde): \ArrayAccess {}

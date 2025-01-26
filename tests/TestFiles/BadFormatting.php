@@ -1,8 +1,7 @@
 <?php
     //
-    // dependency-injection
-    // (c) 2019 RGB Lighthouse <https://rgblighthouse.pl>
-    // (c) 2019 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
+    //  psychob/reflection-file
+    //  (c) 2019 - 2025 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
     //
 
     namespace Tests\PsychoB\ReflectionFile\TestFiles\BadFormattingOf;

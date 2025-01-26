@@ -1,0 +1,16 @@
+<component name="CopyrightManager">
+  <settings>
+    <module2copyright>
+      <element module="Project Files" copyright="default" />
+    </module2copyright>
+    <LanguageOptions name="PHP">
+      <option name="fileTypeOverride" value="3" />
+      <option name="addBlankBefore" value="true" />
+      <option name="block" value="false" />
+      <option name="separateBefore" value="true" />
+      <option name="separateAfter" value="true" />
+      <option name="lenBefore" value="0" />
+      <option name="lenAfter" value="0" />
+    </LanguageOptions>
+  </settings>
+</component>

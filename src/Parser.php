@@ -1,8 +1,7 @@
 <?php
     //
-    // psychob/reflection-file
-    // (c) 2019 RGB Lighthouse <https://rgblighthouse.pl>
-    // (c) 2019 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
+    //  psychob/reflection-file
+    //  (c) 2019 - 2025 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
     //
 
     namespace PsychoB\ReflectionFile;
@@ -11,31 +10,50 @@
 
     class Parser
     {
-        /** @var string */
-        protected $fileName;
+        /** @var string[] */
+        private array $class = [];
 
-        protected $class = [];
-        protected $object = [];
-        protected $interface = [];
-        protected $namespace = [];
-        protected $abstractClass = [];
-        protected $functions = [];
-        protected $traits = [];
+        /** @var string[] */
+        private array $object = [];
 
-        public function __construct(string $fileName)
+        /** @var string[] */
+        private array $interface = [];
+
+        /** @var string[] */
+        private array $namespace = [];
+
+        /** @var string[] */
+        private array $abstractClass = [];
+
+        /** @var string[] */
+        private array $functions = [];
+
+        /** @var string[] */
+        private array $traits = [];
+
+        /** @var string[] */
+        private array $enums = [];
+
+        public function __construct(private readonly string $fileName)
         {
-            $this->fileName = $fileName;
+            //
         }
 
-        public function parse()
+        public function parse(): array
         {
             $content = file_get_contents($this->fileName);
             $tokens = token_get_all($content, TOKEN_PARSE);
 
             $this->parseTokens($tokens);
 
-            return [$this->class, $this->object, $this->interface, $this->namespace, $this->abstractClass,
-                    $this->functions, $this->traits];
+            return [$this->class,
+                $this->object,
+                $this->interface,
+                $this->namespace,
+                $this->abstractClass,
+                $this->functions,
+                $this->traits,
+                $this->enums];
         }
 
         private function parseTokens(array $tokens): void
@@ -91,10 +109,10 @@
         }
 
         private function phpContext(array $tokens,
-                                    int &$it,
-                                    int $tokenCount,
-                                    string $currentNs = '',
-                                    bool $subExpression = false): void
+            int &$it,
+            int $tokenCount,
+            string $currentNs = '',
+            bool $subExpression = false): void
         {
             if ($subExpression) {
                 $this->assertSymbol($tokens, $it, '{');
@@ -108,7 +126,7 @@
                     switch ($tokens[$it][0]) {
                         case T_WHITESPACE:
                         case T_COMMENT:
-                            continue;
+                            continue 2;
 
                         case T_CLOSE_TAG:
                             if (!$subExpression) {
@@ -148,9 +166,13 @@
                             $this->fetchInterface($tokens, $it, $tokenCount, $currentNs);
                             break;
 
+                        case T_ENUM:
+                            $this->fetchEnum($tokens, $it, $tokenCount, $currentNs);
+                            break;
+
                         default:
-//                            dump($tokens[$it], token_name($tokens[$it][0]));
-                            continue;
+                            //dump($tokens[$it], token_name($tokens[$it][0]));
+                            continue 2;
                     }
                 } else {
                     if ($subExpression && $tokens[$it] === '}') {
@@ -176,8 +198,10 @@
                             $name = $tokens[$it][1];
                             break;
                     }
-                } else if (!is_array($tokens[$it]) && in_array($tokens[$it], ['{', '('])) {
-                    break;
+                } else {
+                    if (!is_array($tokens[$it]) && in_array($tokens[$it], ['{', '('])) {
+                        break;
+                    }
                 }
             }
 
@@ -250,8 +274,10 @@
                 // reports opening as token, and closing this tag as symbol. So we need special case
                 if (is_array($tokens[$it]) && $tokens[$it][0] === T_CURLY_OPEN) {
                     $this->skipToSymbol($tokens, $it, $tokenCount, '}');
-                } else if (!is_array($tokens[$it]) && $tokens[$it] === '"') {
-                    break;
+                } else {
+                    if (!is_array($tokens[$it]) && $tokens[$it] === '"') {
+                        break;
+                    }
                 }
             }
         }
@@ -273,22 +299,29 @@
                 if (!is_array($tokens[$it]) && $tokens[$it] === ';') {
                     $this->namespace[] = $ns;
                     return $ns;
-                } else if (!is_array($tokens[$it]) && $tokens[$it] === '{') {
-                    $this->namespace[] = $ns;
-                    $this->phpContext($tokens, $it, $tokenCount, $ns, true);
-                    return '';
                 } else {
-                    switch ($tokens[$it][0]) {
-                        case T_STRING:
-                        case T_NS_SEPARATOR:
-                            $ns .= $tokens[$it][1];
-                            break;
+                    if (!is_array($tokens[$it]) && $tokens[$it] === '{') {
+                        $this->namespace[] = $ns;
+                        $this->phpContext($tokens, $it, $tokenCount, $ns, true);
+                        return '';
+                    } else {
+                        switch ($tokens[$it][0]) {
+                            case T_STRING:
+                            case T_NS_SEPARATOR:
+                            case T_NAME_QUALIFIED:
+                                $ns .= $tokens[$it][1];
+                                break;
 
-                        case T_WHITESPACE:
-                            continue;
+                            case T_NAME_FULLY_QUALIFIED:
+                                $ns = '\\' . $tokens[$it][1];
+                                break;
 
-                        default:
-                            throw new InvalidTokenException($tokens, $it);
+                            case T_WHITESPACE:
+                                continue 2;
+
+                            default:
+                                throw new InvalidTokenException($tokens, $it);
+                        }
                     }
                 }
             }
@@ -353,5 +386,13 @@
             $this->balanceBrackets($tokens, $it, $tokenCount);
 
             return $name;
+        }
+
+        private function fetchEnum(array $tokens, int $it, int $tokenCount, string $currentNs): void
+        {
+            $this->assertToken($tokens, $it, T_ENUM);
+            $it += 2;
+
+            $this->enums[] = $this->classViscera($tokens, $it, $tokenCount, $currentNs);
         }
     }

@@ -1,8 +1,7 @@
 <?php
     //
-    // psychob/reflection-file
-    // (c) 2019 RGB Lighthouse <https://rgblighthouse.pl>
-    // (c) 2019 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
+    //  psychob/reflection-file
+    //  (c) 2019 - 2025 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
     //
 
     namespace PsychoB\ReflectionFile;
@@ -10,7 +9,6 @@
     use PsychoB\ReflectionFile\Exception\ClassNotFoundException;
     use PsychoB\ReflectionFile\Exception\FileNotFoundException;
     use PsychoB\ReflectionFile\Exception\FunctionNotFoundException;
-    use PsychoB\ReflectionFile\Exception\InvalidTokenException;
     use ReflectionClass;
     use ReflectionException;
     use ReflectionFunction;
@@ -59,7 +57,9 @@
          *
          * @throws FileNotFoundException File not found
          */
-        public function __construct(private readonly string $fileName, bool $deferParsing = true, bool $deferLoading = true)
+        public function __construct(private readonly string $fileName,
+            bool $deferParsing = true,
+            bool $deferLoading = true)
         {
             if (!file_exists($this->fileName)) {
                 throw new FileNotFoundException($fileName);

@@ -1,28 +1,17 @@
 <?php
     //
-    // reflection-file
-    // (c) 2019 RGB Lighthouse <https://rgblighthouse.pl>
-    // (c) 2019 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
+    //  psychob/reflection-file
+    //  (c) 2019 - 2025 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
     //
 
     namespace Tests\PsychoB\ReflectionFile\TestFiles\Classes;
 
-    class SimpleClass
-    {
-    }
+    class SimpleClass {}
 
-    abstract class AbstractClass
-    {
-    }
+    abstract class AbstractClass {}
 
-    interface InterfaceForClass
-    {
-    }
+    interface InterfaceForClass {}
 
-    trait TraitForClass
-    {
-    }
+    trait TraitForClass {}
 
-    final class FinalClass
-    {
-    }
+    final class FinalClass {}

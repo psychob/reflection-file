@@ -1,16 +1,18 @@
 <?php
     //
-    // psychob/reflection-file
-    // (c) 2019 - 2025 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
+    //  psychob/reflection-file
+    //  (c) 2019 - 2025 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
     //
 
     namespace Tests\PsychoB\ReflectionFile\TestFiles;
 
-    enum PhpEnum {
+    enum PhpEnum
+    {
         case NewEnum;
     }
 
 
-    enum PhpEnumWithBackingType: int {
+    enum PhpEnumWithBackingType: int
+    {
         case NewEnum = 1;
     }

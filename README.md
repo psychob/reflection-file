@@ -22,7 +22,7 @@ A powerful PHP library for analyzing PHP files through reflection. This library 
 
 ## Requirements
 
-- PHP 8.1 or higher
+- PHP 8.3 or higher
 - Composer
 
 ## Installation

@@ -1,8 +1,7 @@
 <?php
     //
-    // reflection-file
-    // (c) 2019 RGB Lighthouse <https://rgblighthouse.pl>
-    // (c) 2019 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
+    //  psychob/reflection-file
+    //  (c) 2019 - 2025 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
     //
 
     namespace PsychoB\ReflectionFile\Exception;
@@ -11,18 +10,14 @@
 
     class ClassNotFoundException extends ReflectionFileException
     {
-        protected $class;
-
         /**
          * ClassNotFoundException constructor.
          *
-         * @param string          $class
+         * @param string $class
          * @param Throwable|null $previous
          */
-        public function __construct(string $class, ?Throwable $previous = NULL)
+        public function __construct(private readonly string $class, ?Throwable $previous = NULL)
         {
-            $this->class = $class;
-
             parent::__construct(sprintf("Can't load class: {$class}"), 0, $previous);
         }
 

@@ -1,8 +1,7 @@
 <?php
     //
-    // reflection-file
-    // (c) 2019 RGB Lighthouse <https://rgblighthouse.pl>
-    // (c) 2019 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
+    //  psychob/reflection-file
+    //  (c) 2019 - 2025 Andrzej Budzanowski <kontakt@andrzej.budzanowski.pl>
     //
 
     namespace PsychoB\ReflectionFile\Exception;
@@ -11,22 +10,17 @@
 
     class InvalidTokenException extends ReflectionFileException
     {
-        protected $tokens;
-        protected $it;
-        protected $type;
-
-        public function __construct(array $tokens, int $it, $type = NULL, Throwable $previous = NULL)
+        public function __construct(private readonly array $tokens,
+            private readonly int $it,
+            private $type = NULL,
+            Throwable $previous = NULL)
         {
-            $this->tokens = $tokens;
-            $this->it = $it;
-            $this->type = $type;
-
             $message = $this->calculateMessage();
             $message .= $this->calculateLine();
 
             parent::__construct($message, 0, $previous);
 
-            $this->calculateMessage($tokens, $it, $type, $previous);
+            $this->calculateMessage();
         }
 
         private function calculateMessage(): string
@@ -53,8 +47,9 @@
                     }
                 }
 
-                return sprintf("Unknown token: %s, expected: %s", token_name($this->tokens[$this->it][0]),
-                               implode(', ', $types));
+                return sprintf("Unknown token: %s, expected: %s",
+                    token_name($this->tokens[$this->it][0]),
+                    implode(', ', $types));
             }
         }
 
